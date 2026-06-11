@@ -170,7 +170,6 @@ input::placeholder { color: var(--text3); }
 </head>
 <body>
 
-<!-- شاشة الدخول -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo">🌿</div>
@@ -215,7 +214,6 @@ input::placeholder { color: var(--text3); }
     </button>
   </div>
 
-  <!-- تسجيل -->
   <div id="pg-reg" class="pg on">
     <div class="card">
       <div class="card-title">
@@ -287,7 +285,6 @@ input::placeholder { color: var(--text3); }
     </div>
   </div>
 
-  <!-- السجل -->
   <div id="pg-log" class="pg">
     <div class="card">
       <div class="log-header">
@@ -303,7 +300,6 @@ input::placeholder { color: var(--text3); }
     </div>
   </div>
 
-  <!-- الصوبة -->
   <div id="pg-gh" class="pg">
     <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/14lrqAV6EovnglC08cd-5pPcvk1xjQd6ytFzMAlkTU0Q" target="_blank">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -334,7 +330,6 @@ input::placeholder { color: var(--text3); }
     </div>
   </div>
 
-  <!-- تصدير -->
   <div id="pg-exp" class="pg">
     <div class="card">
       <div class="card-title">
@@ -370,11 +365,8 @@ let curOp = 'z', curRow = 'A';
 function formatDate(val){
   if(!val) return '';
   const s = String(val).trim();
-  // YYYY-MM-DD صح
   if(s.match(/^\d{4}-\d{2}-\d{2}$/)) return s;
-  // ISO string فيها T
   if(s.includes('T')) return s.slice(0,10);
-  // نشيل اسم اليوم لو موجود (Mon, Tue, Wed...)
   const clean = s.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*/i,'');
   const withYear = new Date(clean + ' 2026');
   if(!isNaN(withYear.getTime())){
@@ -562,145 +554,4 @@ async function doSubmit(){
 // ===== LOG =====
 function renderLog(filter){
   const wrap=document.getElementById('log-list');
-  const filtered=filter?recs.filter(r=>r.op===filter):recs;
-  if(!filtered.length){
-    wrap.innerHTML='<div class="empty-msg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>مفيش عمليات مسجلة لسه</div>';
-    return;
-  }
-  const secLbl={
-    z:'<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--green-pale);color:var(--green-dark);border:1px solid var(--green-border)">صغير</span>',
-    n:'<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--green-pale);color:var(--green-dark);border:1px solid var(--green-border)">صغير</span> → <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--blue-pale);color:var(--blue-dark);border:1px solid var(--blue-border)">كبير</span>',
-    h:'<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:var(--blue-pale);color:var(--blue-dark);border:1px solid var(--blue-border)">كبير</span>'
-  };
-  wrap.innerHTML=filtered.map(r=>`
-    <div class="log-item ${r.op}">
-      <div style="flex:1">
-        <div class="log-main">ترابيزة <strong>${r.code}</strong> ${secLbl[r.op]||''} · ${r.crop} · ${r.count} نبات</div>
-        <div class="log-meta">${r.date}${r.origin?' · زُرع: '+r.origin:''}${r.resp?' · '+r.resp:''}${r.notes?' · '+r.notes:''}</div>
-      </div>
-      <span class="badge b${r.op}">${OPN[r.op]||''}</span>
-    </div>`).join('');
-}
-
-// ===== GREENHOUSE =====
-function buildState(){
-  const state={};
-  const init=()=>({counts:{},firstDate:null,totalCount:0});
-  [...recs].reverse().forEach(r=>{
-    if(!state[r.code]) state[r.code]={sm:init(),bg:init()};
-    const s=state[r.code];
-    const cnt=parseInt(r.count)||0;
-    const crop=r.crop;
-    if(r.op==='z'){
-      s.sm.counts[crop]=(s.sm.counts[crop]||0)+cnt;
-      s.sm.totalCount+=cnt;
-      if(!s.sm.firstDate) s.sm.firstDate=formatDate(r.date);
-    }
-    if(r.op==='n'){
-      s.sm.counts[crop]=(s.sm.counts[crop]||0)-cnt;
-      s.sm.totalCount-=cnt;
-      if(s.sm.counts[crop]<=0) delete s.sm.counts[crop];
-      if(s.sm.totalCount<=0) s.sm=init();
-      s.bg.counts[crop]=(s.bg.counts[crop]||0)+cnt;
-      s.bg.totalCount+=cnt;
-      if(!s.bg.firstDate) s.bg.firstDate=formatDate(r.date);
-    }
-    if(r.op==='h'){
-      s.bg.counts[crop]=(s.bg.counts[crop]||0)-cnt;
-      s.bg.totalCount-=cnt;
-      if(s.bg.counts[crop]<=0) delete s.bg.counts[crop];
-      if(s.bg.totalCount<=0) s.bg=init();
-    }
-  });
-  return state;
-}
-
-function partLabel(part){
-  return Object.entries(part.counts).map(([c,n])=>`${c} ${n}`).join('<br>');
-}
-
-function cropColorClass(counts){
-  const crops=Object.keys(counts).filter(c=>counts[c]>0);
-  if(crops.length===0) return '';
-  if(crops.length>1) return 'cr-mixed';
-  const c=crops[0];
-  if(c==='باتافيا') return 'cr-batavia';
-  if(c==='أوكليف') return 'cr-oakleaf';
-  if(c==='روسا') return 'cr-rosa';
-  return 'cr-mixed';
-}
-
-function makeTable(stateMap, section){
-  const now=new Date();
-  let html='<table class="gh-table"><thead><tr><th></th>';
-  for(let c=1;c<=17;c++) html+=`<th class="gh-th">${c}</th>`;
-  html+='</tr></thead><tbody>';
-  ['A','B','C','D'].forEach(row=>{
-    html+=`<tr><td class="gh-rh">${row}</td>`;
-    for(let c=1;c<=17;c++){
-      const k=`${row}-${c}`;
-      const s=stateMap[k];
-      const part=s?s[section]:null;
-      const hasPlants=part&&part.totalCount>0;
-      let cls='',cv='';
-      if(hasPlants){
-        const colorCls=cropColorClass(part.counts);
-        if(section==='bg'){
-          const days=part.firstDate?(now-new Date(part.firstDate))/86400000:0;
-          cls=days>=21?`${colorCls} harvest-ready`:colorCls;
-        } else { cls=colorCls; }
-        cv=partLabel(part);
-      }
-      html+=`<td class="gh-cell ${cls}" onclick="cellInfoSec('${k}','${section}')"><span class="cc">${k}</span><span class="cv">${cv}</span></td>`;
-    }
-    html+='</tr>';
-  });
-  html+='</tbody></table>';
-  return html;
-}
-
-function renderGH(){
-  const state=buildState();
-  document.getElementById('gh-small').innerHTML=makeTable(state,'sm');
-  document.getElementById('gh-big').innerHTML=makeTable(state,'bg');
-}
-
-function cellInfoSec(code, section){
-  const state=buildState();
-  const s=state[code];
-  const part=s?s[section]:null;
-  const secName=section==='sm'?'صغير':'كبير';
-  if(!part||part.totalCount<=0){showToast(`${code} (${secName}) — فاضية`);return;}
-  const crops=Object.entries(part.counts).map(([c,n])=>`${c}: ${n}`).join(' | ');
-  const dateStr=part.firstDate?` · 📅 ${part.firstDate}`:'';
-  let daysStr='';
-  if(section==='bg'&&part.firstDate){
-    const diff=Math.floor((new Date()-new Date(part.firstDate))/86400000);
-    if(diff>=0&&diff<365) daysStr=` · ${diff} يوم`;
-  }
-  showToast(`${code} (${secName}) · ${crops} · إجمالي ${part.totalCount}${dateStr}${daysStr}`,false,5000);
-}
-
-// ===== EXPORT =====
-function exportCSV(){
-  if(!recs.length){showToast('مفيش بيانات للتصدير',true);return;}
-  const hdr=['النوع','الترابيزة','الصف','العمود','الصنف','العدد','التاريخ','تاريخ الزراعة','المسؤول','ملاحظات'];
-  const rows=recs.map(r=>[OPN[r.op]||r.op,r.code,r.row,r.col,r.crop,r.count,r.date,r.origin||'',r.resp||'',r.notes||'']);
-  const csv='\uFEFF'+[hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='مزرعة_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-  showToast('تم تنزيل الملف');
-}
-
-// ===== INIT =====
-document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-document.getElementById('f-origin').value=new Date().toISOString().slice(0,10);
-if(localStorage.getItem('hfarm_auth')===PASS){
-  document.getElementById('login-screen').style.display='none';
-  loadFromSheets();
-}
-</script>
-</body>
-</html>
+  const filtered=filter?recs.filter(r=>
