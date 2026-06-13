@@ -478,7 +478,7 @@ async function doLogin(){
   err.style.display='none';
 
   try {
-    const res = await fetch(SCRIPT_URL + '?action=login&pass=' + encodeURIComponent(val), {mode: 'cors'});
+    const res = await fetch(SCRIPT_URL + '?action=login&pass=' + encodeURIComponent(val));
     const json = await res.json();
     if(json.status === 'ok') {
       const expiry = Date.now() + (60 * 60 * 1000); // الجلسة تمتد لساعة
