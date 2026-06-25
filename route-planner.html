@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مرتّب الخط</title>
+<style>
+:root{
+  --bg:#F8F7F4;--surface:#FFF;--surface2:#F1F0ED;
+  --border:rgba(0,0,0,0.08);--border-md:rgba(0,0,0,0.14);
+  --text:#1A1A1A;--text2:#6B6B6B;--text3:#B0B0B0;
+  --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-t:#085041;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-t:#633806;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-t:#791F1F;
+  --r:10px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:.5px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.hbrand{display:flex;align-items:center;gap:10px}
+.hico{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hico svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2}
+.htitle{font-size:14px;font-weight:600}
+.hsub{font-size:11px;color:var(--text3);margin-top:1px}
+.hactions{display:flex;gap:8px;align-items:center}
+
+/* ROUTES TAB BAR */
+.routes-bar{background:var(--surface);border-bottom:.5px solid var(--border);padding:0 18px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.routes-bar::-webkit-scrollbar{height:3px}
+.routes-bar::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:2px}
+.rtab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:all .15s;border:none;background:none;font-family:inherit}
+.rtab:hover{color:var(--text)}
+.rtab.active{color:var(--teal-t);border-bottom-color:var(--teal)}
+.rtab-count{display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--text3);font-size:10px;font-weight:600;border-radius:10px;padding:1px 6px;margin-right:5px}
+.rtab.active .rtab-count{background:var(--teal-bg);color:var(--teal-t)}
+
+/* CONTAINER */
+.container{max-width:620px;margin:0 auto;padding:18px}
+
+/* SETUP */
+.setup-card{background:var(--amber-bg);border:.5px solid #EF9F27;border-radius:var(--rl);padding:20px}
+.setup-card h3{font-size:14px;font-weight:600;color:var(--amber-t);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.setup-card h3 svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.sstep{display:flex;gap:10px;font-size:13px;color:var(--amber-t);align-items:flex-start;margin-bottom:8px}
+.snum{width:18px;height:18px;border-radius:50%;background:var(--amber-t);color:var(--amber-bg);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.code-box{background:#fff;border:.5px solid #EF9F27;border-radius:var(--r);padding:10px 12px;font-family:monospace;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-all;max-height:120px;overflow-y:auto;line-height:1.6;margin:10px 0}
+.url-row{display:flex;gap:8px;margin-top:10px}
+.url-input{flex:1;padding:9px 12px;border:.5px solid #EF9F27;border-radius:var(--r);font-size:13px;background:#fff;color:var(--text);font-family:inherit;outline:none;direction:ltr}
+
+/* SHEET INFO BOX */
+.sheet-info{background:var(--teal-bg);border:.5px solid #A8DFC9;border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--teal-t);display:flex;align-items:center;gap:8px}
+.sheet-info svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0}
+
+/* STATES */
+.loading{text-align:center;padding:50px 20px;color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:12px}
+.spin{width:26px;height:26px;border:2.5px solid var(--border-md);border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text3)}
+.empty-state svg{width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:1.5;margin-bottom:12px;opacity:.4}
+.empty-state h3{font-size:14px;color:var(--text2);margin-bottom:6px}
+.empty-state p{font-size:12px}
+
+/* STATUS BAR */
+.status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.status-info{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0}
+
+/* TOUCH HINT */
+.touch-hint{font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:5px}
+.touch-hint svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* SORT LIST */
+.sort-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.sort-item{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:grab;user-select:none;transition:box-shadow .15s,border-color .15s;touch-action:none}
+.sort-item:active{cursor:grabbing}
+.sort-item.dragging{opacity:.45;border-color:var(--teal)}
+.sort-item.drag-over{border-color:var(--teal);background:var(--teal-bg);transform:scale(1.01)}
+.sort-num{width:26px;height:26px;border-radius:7px;background:var(--teal);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sort-name{flex:1;font-size:14px;font-weight:500}
+.drag-handle{color:var(--text3);display:flex;flex-direction:column;gap:3px;padding:4px;flex-shrink:0}
+.drag-handle span{display:block;width:16px;height:2px;background:currentColor;border-radius:2px}
+
+/* CONFIRM */
+.confirm-area{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.confirm-area h4{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.confirm-list{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+.confirm-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:3px 0}
+.crow-num{font-size:11px;font-weight:700;color:var(--teal);min-width:20px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:.5px solid var(--border-md);background:var(--surface);color:var(--text);font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--teal);color:#fff;border-color:var(--teal)}.btn.pri:hover{background:var(--teal-t)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:50px 20px}
+.success-ico{width:60px;height:60px;background:var(--teal-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.success-ico svg{width:28px;height:28px;fill:none;stroke:var(--teal);stroke-width:2.5}
+.success-screen h2{font-size:17px;font-weight:600;margin-bottom:6px}
+.success-screen p{font-size:13px;color:var(--text2);margin-bottom:20px}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;display:flex;align-items:center;gap:8px;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--red)}
+#toast svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0}
+
+@media(max-width:480px){
+  .container{padding:12px}
+  .sort-name{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hbrand">
+    <div class="hico"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h12"/></svg></div>
+    <div>
+      <div class="htitle">مرتّب الخط</div>
+      <div class="hsub" id="h-date">جارٍ التحميل...</div>
+    </div>
+  </div>
+  <div class="hactions">
+    <button class="btn sm" id="refresh-btn" onclick="loadData()" style="display:none">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>تحديث
+    </button>
+    <button class="btn sm" onclick="showSetup()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>إعداد
+    </button>
+  </div>
+</div>
+
+<!-- ROUTES TAB BAR -->
+<div class="routes-bar" id="routes-bar" style="display:none"></div>
+
+<div class="container">
+
+  <!-- SETUP -->
+  <div id="view-setup">
+    <div class="setup-card">
+      <h3><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>ربط التطبيق بـ Google Sheets</h3>
+      <div class="sstep"><div class="snum">1</div><div>الشيت لازم يكون على الشكل ده:<br><strong>الصف 1:</strong> التاريخ في A1، أسماء الخطوط في B1، C1، D1...<br><strong>الصف 2:</strong> أوصاف الخطوط (اختياري)<br><strong>من الصف 3:</strong> أسماء العملاء تحت كل خط</div></div>
+      <div class="sstep"><div class="snum">2</div><div>افتح الشيت ← <strong>Extensions → Apps Script</strong> ← احذف الكود والصق:</div></div>
+      <div class="code-box" id="script-code">function doGet(e){return handle(e)}
+function doPost(e){return handle(e)}
+function handle(e){
+  try{
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var sh=ss.getSheets()[0];
+    var p=e.parameter,a=p.action,b={};
+    if(e.postData)b=JSON.parse(e.postData.contents);
+    if(a==="getRoutes"){
+      var lastCol=sh.getLastColumn();
+      var lastRow=sh.getLastRow();
+      var routes=[];
+      for(var c=2;c&lt;=lastCol;c++){
+        var routeName=sh.getRange(1,c).getValue()||("خط "+(c-1));
+        var customers=[];
+        for(var r=3;r&lt;=lastRow;r++){
+          var val=sh.getRange(r,c).getValue();
+          if(val)customers.push({name:String(val),row:r});
+        }
+        if(customers.length||routeName)routes.push({col:c,name:String(routeName),customers:customers});
+      }
+      var dateVal=sh.getRange(1,1).getValue();
+      return out({ok:true,routes:routes,date:String(dateVal||"")});
+    }
+    if(a==="saveRoute"){
+      var col=b.col;
+      var customers=b.customers;
+      var lastRow=sh.getLastRow();
+      // clear old data in this column from row 3
+      if(lastRow>=3)sh.getRange(3,col,lastRow-2,1).clearContent();
+      // write new order
+      for(var i=0;i&lt;customers.length;i++){
+        sh.getRange(3+i,col).setValue(customers[i].name);
+      }
+      return out({ok:true});
+    }
+    return out({ok:false,error:"unknown"});
+  }catch(err){return out({ok:false,error:err.toString()})}
+}
+function out(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}</div>
+      <button class="btn sm" onclick="copyCode()" style="margin-bottom:12px">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>نسخ الكود
+      </button>
+      <div class="sstep"><div class="snum">3</div><div><strong>Deploy → New deployment → Web app</strong><br>Execute as: <strong>Me</strong> / Who has access: <strong>Anyone</strong></div></div>
+      <div class="sstep"><div class="snum">4</div><div>انسخ الـ Web app URL والصقه هنا:</div></div>
+      <div class="url-row">
+        <input type="text" class="url-input" id="script-url" placeholder="https://script.google.com/macros/s/.../exec">
+        <button class="btn pri sm" onclick="saveUrl()">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>حفظ
+        </button>
+      </div>
+      <div id="url-status" style="margin-top:10px;font-size:12px;display:none"></div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="view-loading" style="display:none">
+    <div class="loading"><div class="spin"></div><span>جارٍ تحميل الخطوط...</span></div>
+  </div>
+
+  <!-- EMPTY -->
+  <div id="view-empty" style="display:none">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <h3>لا يوجد عملاء في هذا الخط</h3>
+      <p>أضف أسماء العملاء في الشيت ثم اضغط تحديث</p>
+    </div>
+  </div>
+
+  <!-- ROUTE VIEW -->
+  <div id="view-route" style="display:none">
+    <div class="sheet-info" id="sheet-info">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span id="info-txt">جارٍ التحميل...</span>
+    </div>
+    <div class="status-bar">
+      <div class="status-info"><span class="sdot"></span><span id="route-count">0 عميل</span></div>
+      <button class="btn sm" onclick="resetOrder()">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>الترتيب الأصلي
+      </button>
+    </div>
+    <div class="touch-hint">
+      <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+      اسحب وأفلت لترتيب العملاء
+    </div>
+    <div class="sort-list" id="sort-list"></div>
+    <div class="confirm-area">
+      <h4>الترتيب النهائي</h4>
+      <div class="confirm-list" id="confirm-list"></div>
+      <div class="btn-row">
+        <button class="btn pri" onclick="saveOrder()" id="save-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+          حفظ الترتيب في الشيت
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="view-success" style="display:none">
+    <div class="success-screen">
+      <div class="success-ico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>تم حفظ الترتيب!</h2>
+      <p id="success-txt">تم تحديث الشيت بالترتيب الجديد</p>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn pri" onclick="backToRoute()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>رجوع للخط
+        </button>
+        <button class="btn" onclick="loadData()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>تحديث الكل
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-txt"></span></div>
+
+<script>
+let SCRIPT_URL = localStorage.getItem('route_script_url') || '';
+let routes = [];         // all routes from sheet
+let currentRouteIdx = 0; // active tab
+let items = [];          // current route customers (working copy)
+let originalItems = [];  // for reset
+let dragIdx = null;
+let touchStartIdx = null;
+
+/* ══ UTILS ══ */
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-txt').textContent = msg;
+  t.className = type === 'err' ? 'show err' : 'show';
+  setTimeout(() => t.className = '', 3000);
+}
+
+function copyCode() {
+  const code = document.getElementById('script-code').textContent;
+  navigator.clipboard.writeText(code)
+    .then(() => toast('تم نسخ الكود ✓'))
+    .catch(() => toast('انسخه يدوياً', 'err'));
+}
+
+function showView(v) {
+  ['setup','loading','empty','route','success'].forEach(x =>
+    document.getElementById('view-'+x).style.display = 'none');
+  document.getElementById('view-'+v).style.display = 'block';
+  document.getElementById('refresh-btn').style.display = (v==='route'||v==='success') ? '' : 'none';
+  document.getElementById('routes-bar').style.display = (v==='route'||v==='success') ? '' : 'none';
+}
+
+/* ══ API ══ */
+async function apiFetch(action, body) {
+  const url = SCRIPT_URL + '?action=' + action;
+  const opts = body
+    ? { method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(body) }
+    : { method:'GET', redirect:'follow' };
+  const r = await fetch(url, opts);
+  const txt = await r.text();
+  try { return JSON.parse(txt); } catch(e) { return null; }
+}
+
+/* ══ SETUP ══ */
+function showSetup() {
+  showView('setup');
+  if (SCRIPT_URL) document.getElementById('script-url').value = SCRIPT_URL;
+}
+
+async function saveUrl() {
+  const url = document.getElementById('script-url').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    toast('أدخل URL صحيح من Apps Script', 'err'); return;
+  }
+  SCRIPT_URL = url;
+  const st = document.getElementById('url-status');
+  st.style.display = 'block'; st.style.color = 'var(--text2)';
+  st.textContent = 'جارٍ اختبار الاتصال...';
+  try {
+    const j = await apiFetch('getRoutes');
+    if (j && j.ok !== undefined) {
+      localStorage.setItem('route_script_url', url);
+      st.style.color = 'var(--teal-t)';
+      st.textContent = '✓ تم الاتصال بنجاح!';
+      setTimeout(() => loadData(), 700);
+    } else {
+      st.style.color = 'var(--red-t)';
+      st.textContent = 'الـ URL لا يستجيب — تأكد من الإعداد';
+    }
+  } catch(e) {
+    st.style.color = 'var(--red-t)';
+    st.textContent = 'تعذر الاتصال — تأكد أن Deploy تم بصلاحية "Anyone"';
+  }
+}
+
+/* ══ LOAD ══ */
+async function loadData() {
+  if (!SCRIPT_URL) { showSetup(); return; }
+  showView('loading');
+  try {
+    const j = await apiFetch('getRoutes');
+    if (j && j.ok && j.routes) {
+      routes = j.routes;
+      // update date in header
+      if (j.date) document.getElementById('h-date').textContent = j.date;
+      if (!routes.length) { showView('empty'); return; }
+      renderTabs();
+      selectRoute(currentRouteIdx < routes.length ? currentRouteIdx : 0);
+    } else {
+      toast('خطأ في تحميل البيانات', 'err');
+      showSetup();
+    }
+  } catch(e) {
+    toast('تعذر الاتصال', 'err');
+    showSetup();
+  }
+}
+
+/* ══ TABS ══ */
+function renderTabs() {
+  const bar = document.getElementById('routes-bar');
+  bar.innerHTML = routes.map((r, i) => `
+    <button class="rtab${i===currentRouteIdx?' active':''}" onclick="selectRoute(${i})">
+      ${r.name}
+      <span class="rtab-count">${r.customers.length}</span>
+    </button>`).join('');
+}
+
+function selectRoute(idx) {
+  currentRouteIdx = idx;
+  const route = routes[idx];
+  if (!route) return;
+  // deep copy customers
+  items = route.customers.map(c => ({...c}));
+  originalItems = route.customers.map(c => ({...c}));
+  // update tabs highlight
+  document.querySelectorAll('.rtab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  // update info
+  document.getElementById('info-txt').textContent =
+    `${route.name} · ${items.length} عميل · العمود ${String.fromCharCode(64+route.col)}`;
+  document.getElementById('route-count').textContent = items.length + ' عميل';
+  renderList();
+  showView('route');
+}
+
+/* ══ RENDER LIST ══ */
+function renderList() {
+  const list = document.getElementById('sort-list');
+  const confirmList = document.getElementById('confirm-list');
+  list.innerHTML = items.map((item, i) => `
+    <div class="sort-item" draggable="true" data-idx="${i}"
+      ondragstart="onDragStart(event,${i})"
+      ondragover="onDragOver(event,${i})"
+      ondragleave="onDragLeave(event)"
+      ondrop="onDrop(event,${i})"
+      ondragend="onDragEnd()"
+      ontouchstart="onTouchStart(event,${i})"
+      ontouchmove="onTouchMove(event)"
+      ontouchend="onTouchEnd(event,${i})">
+      <div class="sort-num">${i+1}</div>
+      <div class="sort-name">${item.name}</div>
+      <div class="drag-handle"><span></span><span></span><span></span></div>
+    </div>`).join('');
+  confirmList.innerHTML = items.map((item, i) => `
+    <div class="confirm-row">
+      <span class="crow-num">${i+1}</span>
+      <span>${item.name}</span>
+    </div>`).join('');
+}
+
+function resetOrder() {
+  items = originalItems.map(c => ({...c}));
+  renderList();
+  toast('تم الرجوع للترتيب الأصلي');
+}
+
+/* ══ SAVE ══ */
+async function saveOrder() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin" style="width:13px;height:13px;border-width:2px;margin-left:4px"></div> جارٍ الحفظ...';
+  try {
+    const route = routes[currentRouteIdx];
+    const j = await apiFetch('saveRoute', { col: route.col, customers: items });
+    if (j && j.ok) {
+      // update local cache
+      routes[currentRouteIdx].customers = items.map(c => ({...c}));
+      originalItems = items.map(c => ({...c}));
+      document.getElementById('success-txt').textContent =
+        `تم حفظ ترتيب خط "${route.name}" في الشيت ✓`;
+      showView('success');
+    } else {
+      toast('فشل الحفظ — حاول مجدداً', 'err');
+    }
+  } catch(e) {
+    toast('تعذر الاتصال', 'err');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>حفظ الترتيب في الشيت';
+}
+
+function backToRoute() {
+  document.getElementById('routes-bar').style.display = '';
+  showView('route');
+}
+
+/* ══ DRAG & DROP ══ */
+function onDragStart(e, idx) {
+  dragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => document.querySelectorAll('.sort-item')[idx]?.classList.add('dragging'), 0);
+}
+function onDragOver(e, idx) {
+  e.preventDefault();
+  document.querySelectorAll('.sort-item').forEach(el => el.classList.remove('drag-over'));
+  if (idx !== dragIdx) document.querySelectorAll('.sort-item')[idx]?.classList.add('drag-over');
+}
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e, toIdx) {
+  e.preventDefault();
+  if (dragIdx === null || dragIdx === toIdx) return;
+  const moved = items.splice(dragIdx, 1)[0];
+  items.splice(toIdx, 0, moved);
+  dragIdx = null;
+  renderList();
+}
+function onDragEnd() {
+  document.querySelectorAll('.sort-item').forEach(el => el.classList.remove('dragging','drag-over'));
+  dragIdx = null;
+}
+
+/* ══ TOUCH DRAG ══ */
+function onTouchStart(e, idx) {
+  touchStartIdx = idx;
+  document.querySelectorAll('.sort-item')[idx]?.classList.add('dragging');
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const item = el?.closest('.sort-item');
+  document.querySelectorAll('.sort-item').forEach(x => x.classList.remove('drag-over'));
+  if (item && item !== document.querySelectorAll('.sort-item')[touchStartIdx])
+    item.classList.add('drag-over');
+}
+function onTouchEnd(e) {
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const item = el?.closest('.sort-item');
+  document.querySelectorAll('.sort-item').forEach(x => x.classList.remove('dragging','drag-over'));
+  if (item) {
+    const toIdx = parseInt(item.getAttribute('data-idx'));
+    if (!isNaN(toIdx) && toIdx !== touchStartIdx) {
+      const moved = items.splice(touchStartIdx, 1)[0];
+      items.splice(toIdx, 0, moved);
+      renderList();
+    }
+  }
+  touchStartIdx = null;
+}
+
+/* ══ INIT ══ */
+if (SCRIPT_URL) { loadData(); } else { showSetup(); }
+</script>
+</body>
+</html>
