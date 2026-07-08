@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4سبان ورقيات 68</title>
+<title>4سبان ورقيات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -129,9 +129,10 @@ input::placeholder{color:var(--tx3)}
     <div class="login-logo">🌿</div>
     <div class="login-title">4سبان ورقيات</div>
     <div class="login-sub">نظام إدارة الصوبة</div>
-    <input class="login-input" type="password" id="login-input" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">دخول</button>
-    <div class="login-error" id="login-error">كلمة المرور غلط</div>
+    <input class="login-input" type="text" id="login-user" placeholder="اسم المستخدم" autocomplete="username" style="letter-spacing:0;margin-bottom:10px">
+    <input class="login-input" type="password" id="login-pass" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">دخول</button>
+    <div class="login-error" id="login-error">اسم المستخدم أو كلمة المرور غلط</div>
   </div>
 </div>
 
@@ -140,9 +141,13 @@ input::placeholder{color:var(--tx3)}
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
     4سبان ورقيات
   </div>
-  <div class="sync-pill" onclick="forceRefresh()" title="اضغط لتحديث البيانات">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="user-badge" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.9);display:none"></span>
+    <a id="admin-link" href="#" target="_blank" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.9);text-decoration:none;display:none">📊 الشيت</a>
+    <div class="sync-pill" onclick="forceRefresh()" title="اضغط لتحديث البيانات">
     <span class="sync-dot" id="sync-dot"></span>
     <span id="sync-lbl">جاري التحميل...</span>
+  </div>
   </div>
 </div>
 
@@ -301,7 +306,7 @@ input::placeholder{color:var(--tx3)}
 <div class="toast-wrap"><div class="toast" id="toast"></div></div>
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyKMvGA60A-rGa72BO8XdLNuNIaxR0il6sufEmkOGDXLWr9VMx3IA9k_fNzJ8N-D_DrMQ/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby44bpnHRbYJWJA15GjqCH7B1Uk0r3odkZOgXKcMqoXpC-S5uQ63vDEVMEorCC9tjyUDw/exec';
 const OPN={z:'زراعة',n:'نقل',h:'حصاد'};
 const OPN_R={'زراعة':'z','نقل':'n','حصاد':'h'};
 const CAP={A:{s:176,b:176},B:{s:176,b:176},C:{s:176,b:176},D:{s:140,b:140}};
@@ -310,7 +315,23 @@ const MONTHS={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug
 let recs=[],ghState=null,dataLoaded=false,loadPromise=null;
 let curOp='z',curRow='A',activeTab='reg';
 
-function getAuth(){ return sessionStorage.getItem('hfarm_auth')||''; }
+let currentUser=null;
+function getCredentials(){ return {username:sessionStorage.getItem('s1_user')||'',password:sessionStorage.getItem('s1_pass')||''}; }
+
+// ── API CALL — fetch + JSONP fallback ──
+async function apiCall(params){
+  const url=SCRIPT_URL+'?'+new URLSearchParams(params).toString();
+  try{ const res=await fetch(url,{mode:'cors'}); return await res.json(); } catch(e){}
+  return new Promise((resolve,reject)=>{
+    const cb='api_'+Date.now();
+    const s=document.createElement('script');
+    window[cb]=(data)=>{delete window[cb];try{document.head.removeChild(s);}catch(e){}resolve(data);};
+    s.onerror=()=>{delete window[cb];reject(new Error('failed'));};
+    setTimeout(()=>{delete window[cb];try{document.head.removeChild(s);}catch(e){}reject(new Error('timeout'));},8000);
+    s.src=url+'&callback='+cb;
+    document.head.appendChild(s);
+  });
+}
 
 // === DATE UTILS ===
 function parseDate(val){
@@ -352,8 +373,8 @@ function setSyncStatus(state,msg){
 function loadFromSheets(force=false){
   if(!force&&loadPromise) return loadPromise;
   setSyncStatus('loading','جاري التحميل...');
-  loadPromise=fetch(SCRIPT_URL+'?action=read&pass='+encodeURIComponent(getAuth()),{mode:'cors'})
-    .then(r=>r.json())
+  const cred=getCredentials();
+  loadPromise=apiCall({action:'read',username:cred.username,password:cred.password})
     .then(json=>{
       if(json.status==='ok'&&json.data){
         recs=json.data.filter(r=>r.type).map((r,i)=>({
@@ -380,24 +401,39 @@ function forceRefresh(){ loadPromise=null; ghState=null; loadFromSheets(true); }
 
 // === LOGIN ===
 async function doLogin(){
-  const pass=document.getElementById('login-input').value;
+  const username=document.getElementById('login-user').value.trim();
+  const password=document.getElementById('login-pass').value;
   const err=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
   err.style.display='none';
-  try{
-    const res=await fetch(SCRIPT_URL+'?action=login&pass='+encodeURIComponent(pass),{mode:'cors'});
-    const json=await res.json();
-    if(json.status==='ok'){
-      sessionStorage.setItem('hfarm_auth',pass);
-      document.getElementById('login-screen').style.display='none';
-      loadFromSheets();
-    } else {
-      err.style.display='block';
-      err.textContent=json.message||'كلمة المرور غلط';
-    }
-  } catch(e){
+  if(!username||!password){err.style.display='block';err.textContent='اكتب اسم المستخدم وكلمة المرور';return;}
+  btn.disabled=true;btn.textContent='جاري التحقق...';
+  let json=null;
+  try{ json=await apiCall({action:'login',username,password}); } catch(e){}
+  if(json&&json.status==='ok'){
+    sessionStorage.setItem('s1_user',username);
+    sessionStorage.setItem('s1_pass',password);
+    sessionStorage.setItem('s1_role',json.role);
+    currentUser={username,role:json.role};
+    showApp();
+  } else {
     err.style.display='block';
-    err.textContent='تعذر الاتصال، حاول تاني';
+    err.textContent=json?.message||'تعذر الاتصال، حاول تاني';
   }
+  btn.disabled=false;btn.textContent='دخول';
+}
+
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  const badge=document.getElementById('user-badge');
+  badge.textContent='👤 '+currentUser.username;
+  badge.style.display='block';
+  if(currentUser.role==='admin'){
+    const al=document.getElementById('admin-link');
+    al.href='https://docs.google.com/spreadsheets/d/14lrqAV6EovnglC08cd-5pPcvk1xjQd6ytFzMAlkTU0Q';
+    al.style.display='block';
+  }
+  loadFromSheets();
 }
 
 // === TABS ===
@@ -483,31 +519,10 @@ async function doSubmit(){
   btn.disabled=true;lbl.textContent='جاري الإرسال...';
   setSyncStatus('loading','بيتبعت...');
 
-  const params=new URLSearchParams({
-    type:OPN[curOp],code,row:curRow,col:parseInt(col),
-    crop,count,date,origin:origin||'',resp,notes,
-    pass:getAuth()
-  });
-
+  const cred2=getCredentials();
+  const params={type:OPN[curOp],code,row:curRow,col:parseInt(col),crop,count,date,origin:origin||'',resp,notes,...cred2};
   let ok=false;
-  try{
-    const res=await fetch(SCRIPT_URL+'?'+params,{mode:'cors'});
-    const json=await res.json();
-    ok=json.status==='ok';
-  }catch(e){
-    try{
-      await new Promise(resolve=>{
-        const s=document.createElement('script');
-        const cb='cb_'+Date.now();
-        window[cb]=()=>{delete window[cb];resolve();};
-        s.onerror=resolve;setTimeout(resolve,6000);
-        s.src=SCRIPT_URL+'?'+params+'&callback='+cb;
-        document.head.appendChild(s);
-        setTimeout(()=>{try{document.head.removeChild(s);}catch(e2){}},7000);
-      });
-      ok=true;
-    }catch(e2){}
-  }
+  try{ const json=await apiCall(params); ok=json.status==='ok'; } catch(e){}
 
   if(ok){
     recs.unshift({id:Date.now(),op:curOp,code,row:curRow,col:parseInt(col),crop,count,date,origin,resp,notes});
@@ -697,9 +712,12 @@ function showToast(msg,isErr=false,dur=3500){
 // === INIT ===
 document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
 document.getElementById('f-origin').value=new Date().toISOString().slice(0,10);
-if(sessionStorage.getItem('hfarm_auth')){
-  document.getElementById('login-screen').style.display='none';
-  loadFromSheets();
+const savedUser=sessionStorage.getItem('s1_user');
+const savedPass=sessionStorage.getItem('s1_pass');
+const savedRole=sessionStorage.getItem('s1_role');
+if(savedUser&&savedPass){
+  currentUser={username:savedUser,role:savedRole||'user'};
+  showApp();
 }
 </script>
 </body>
