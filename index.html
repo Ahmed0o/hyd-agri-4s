@@ -115,6 +115,7 @@ input::placeholder{color:var(--tx3)}
 .gh-cell.age-y{border-color:#F9A825!important;border-width:3px!important}
 .gh-cell.age-g{border-color:#2E7D32!important;border-width:3px!important}
 .gh-cell.age-r{border-color:#C62828!important;border-width:3.5px!important}
+.gh-cell.age-sm{border-color:#888888!important;border-width:3px!important}
 .sheet-link{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:var(--r2);border:1.5px solid var(--gb);background:var(--gp);color:var(--gd);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:16px}
 .toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
 .toast{background:var(--gd);color:#fff;padding:11px 22px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;white-space:nowrap;max-width:92vw;text-align:center}
@@ -267,6 +268,7 @@ input::placeholder{color:var(--tx3)}
         <div class="leg"><div class="leg-dot" style="background:#F8A8A8;border-color:#C62828"></div>أوكليف</div>
         <div class="leg"><div class="leg-dot" style="background:#FCE4EC;border-color:#EC407A"></div>روسا</div>
         <div class="leg"><div class="leg-dot" style="background:#EDE7F6;border-color:#7E57C2"></div>مختلط</div>
+        <div class="leg"><div class="leg-dot" style="background:#D6F0E0;border-color:#888;border-width:3px"></div>+15 يوم</div>
       </div>
       <div class="gh-scroll"><div id="gh-small"></div></div>
     </div>
@@ -497,6 +499,12 @@ async function doSubmit(){
   if(curOp==='n'){const av=state[code]?.sm?.counts?.[crop]||0;if(count>av){showToast(`المتاح للنقل ${av} فقط`,true);return;}}
   if(curOp==='h'){const av=state[code]?.bg?.counts?.[crop]||0;if(count>av){showToast(`المتاح للحصاد ${av} فقط`,true);return;}}
   if(curOp==='z'&&currentTotal+count>cap){showToast(`تجاوز الطاقة! المتاح ${cap-currentTotal} نبات`,true);return;}
+  // التحقق من طاقة الكبير عند النقل
+  if(curOp==='n'){
+    const bgPart=state[code]?.bg;
+    const bgTotal=bgPart?bgPart.total:0;
+    if(bgTotal+count>cap){showToast(`تجاوز طاقة الكبير! المتاح ${cap-bgTotal} نبات`,true);return;}
+  }
   const btn=document.getElementById('sub-btn');
   const lbl=document.getElementById('sub-lbl');
   btn.disabled=true;lbl.textContent='جاري الإرسال...';
@@ -592,7 +600,7 @@ function makeTable(state,section){
       if(has){
         const col=colorCls(part.counts);
         if(section==='bg'){ const days=part.date?daysDiff(part.date):-1; cls=(col+' '+ageCls(days)).trim(); cv=`${part.total}<br>${days>=0?days+'d':''}`; }
-        else { cls=col; cv=`${part.total}`; }
+        else { const days=part.date?daysDiff(part.date):-1; cls=col+(days>=15?' age-sm':''); cv=`${part.total}`; }
       }
       h+=`<td class="gh-cell ${cls}" onclick="cellInfo('${k}','${section}')"><span class="cc">${k}</span><span class="cv">${cv}</span></td>`;
     }
