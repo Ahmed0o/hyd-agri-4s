@@ -260,6 +260,12 @@ input::placeholder{color:var(--tx3)}
   </div>
 
   <div id="pg-gh" class="pg">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button onclick="downloadGhPDF()" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r2);border:1.5px solid var(--gb);background:var(--gp);color:var(--gd);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        طباعة / PDF
+      </button>
+    </div>
     <div class="card" style="margin-bottom:14px">
       <div class="card-title">🌱 القسم الصغير — الزراعة الحالية</div>
       <div class="legend">
@@ -663,6 +669,70 @@ function exportCSV(){
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download='4سبان_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();showToast('تم تنزيل الملف');
+}
+
+function downloadGhPDF(){
+  var now=new Date();
+  var dateStr=fmtDisplay(now.toISOString().slice(0,10));
+  var timeStr=now.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+  var smallHTML=document.getElementById('gh-small').innerHTML;
+  var bigHTML=document.getElementById('gh-big').innerHTML;
+  var css=[
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#0F1F14;direction:rtl}',
+    '.header{text-align:center;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #1A5C38}',
+    '.header h1{font-size:17px;color:#0F3D22;margin-bottom:4px}',
+    '.header p{font-size:11px;color:#4A6355}',
+    '.section{margin-bottom:18px}',
+    '.section-title{font-size:13px;font-weight:700;color:#0F3D22;margin-bottom:8px;padding:5px 10px;background:#EAF5EF;border-radius:5px;border-right:4px solid #1A5C38}',
+    '.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:10px}',
+    '.leg{display:flex;align-items:center;gap:4px}',
+    '.leg-dot{width:11px;height:11px;border-radius:3px;border:1px solid #ccc;display:inline-block}',
+    'table{border-collapse:separate;border-spacing:2px;width:100%}',
+    'th{font-size:10px;font-weight:700;color:#7A9A88;text-align:center;padding:2px}',
+    '.gh-rh{font-size:10px;font-weight:700;color:#0F3D22;text-align:center;padding:2px 5px;background:#EAF5EF;border-radius:4px}',
+    'td.gh-cell{width:50px;height:40px;border-radius:5px;border:1.5px solid #D8E5DC;text-align:center;vertical-align:middle;background:#F0F4F1}',
+    '.cc{font-size:9px;font-weight:700;display:block;color:#7A9A88}',
+    '.cv{font-size:8px;display:block;margin-top:1px;line-height:1.2;color:#4A6355}',
+    'td.bat{background:#D6F0E0;border-color:#4CAF50} td.bat .cc{color:#1B5E20}',
+    'td.oak{background:#F8A8A8;border-color:#C62828} td.oak .cc{color:#5C0000}',
+    'td.ros{background:#FCE4EC;border-color:#EC407A} td.ros .cc{color:#880E4F}',
+    'td.mix{background:#EDE7F6;border-color:#7E57C2} td.mix .cc{color:#311B92}',
+    'td.age-y{border-color:#F9A825!important;border-width:2.5px!important}',
+    'td.age-g{border-color:#2E7D32!important;border-width:2.5px!important}',
+    'td.age-r{border-color:#C62828!important;border-width:3px!important}',
+    'td.age-sm{border-color:#888!important;border-width:2.5px!important}',
+    '.footer{text-align:center;font-size:10px;color:#7A9A88;margin-top:14px;padding-top:8px;border-top:1px solid #D8E5DC}',
+    '@media print{@page{size:A4 landscape;margin:10mm}}'
+  ].join('\n');
+  var html='<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
+    +'<title>خريطة الصوبة</title><style>'+css+'</style></head><body>'
+    +'<div class="header"><h1>🌿 خريطة الصوبة — 4سبان ورقيات 68</h1>'
+    +'<p>تاريخ الطباعة: '+dateStr+' — '+timeStr+'</p></div>'
+    +'<div class="section"><div class="section-title">🌱 القسم الصغير — الزراعة الحالية</div>'
+    +'<div class="legend">'
+    +'<div class="leg"><span class="leg-dot" style="background:#F0F4F1"></span>فاضية</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#D6F0E0;border-color:#4CAF50"></span>باتافيا</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#F8A8A8;border-color:#C62828"></span>أوكليف</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#FCE4EC;border-color:#EC407A"></span>روسا</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#D6F0E0;border-color:#888;border-width:2.5px"></span>+15 يوم</div>'
+    +'</div>'+smallHTML+'</div>'
+    +'<div class="section"><div class="section-title">📦 القسم الكبير — المنقول للتكبير</div>'
+    +'<div class="legend">'
+    +'<div class="leg"><span class="leg-dot" style="background:#F0F4F1"></span>فاضية</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#D6F0E0;border-color:#4CAF50"></span>باتافيا</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#F8A8A8;border-color:#C62828"></span>أوكليف</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#FCE4EC;border-color:#EC407A"></span>روسا</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#F0F4F1;border-color:#F9A825;border-width:2.5px"></span>20-25 يوم</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#F0F4F1;border-color:#2E7D32;border-width:2.5px"></span>25-30 يوم</div>'
+    +'<div class="leg"><span class="leg-dot" style="background:#F0F4F1;border-color:#C62828;border-width:3px"></span>+30 يوم</div>'
+    +'</div>'+bigHTML+'</div>'
+    +'<div class="footer">نظام إدارة الصوبة الهيدروبونيك — 4سبان ورقيات</div>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+  var win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
 }
 
 let _tt;
