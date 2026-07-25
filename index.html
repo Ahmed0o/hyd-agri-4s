@@ -606,7 +606,7 @@ function makeTable(state,section){
       if(has){
         const col=colorCls(part.counts);
         if(section==='bg'){ const days=part.date?daysDiff(part.date):-1; cls=(col+' '+ageCls(days)).trim(); cv=`${part.total}<br>${days>=0?days+'d':''}`; }
-        else { const days=part.date?daysDiff(part.date):-1; cls=col+(days>=15?' age-sm':''); cv=`${part.total}`; }
+        else { const days=part.date?daysDiff(part.date):-1; cls=col+(days>=15?' age-sm':''); cv=`${part.total}<br>${days>=0?days+'d':''}`; }
       }
       h+=`<td class="gh-cell ${cls}" onclick="cellInfo('${k}','${section}')"><span class="cc">${k}</span><span class="cv">${cv}</span></td>`;
     }
